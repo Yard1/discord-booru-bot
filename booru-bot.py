@@ -102,6 +102,7 @@ async def do_booru(booru, tags, modifier=None, limit=1):
     except:
         traceback.print_exc()
     if js:
+        print(len(js))
         if modifier == "Random":
             random.shuffle(js)
         elif modifier == "Best":
@@ -110,19 +111,17 @@ async def do_booru(booru, tags, modifier=None, limit=1):
             )
         elif modifier == "Count":
             image = len(js)
-            return f"On {booru} there are {image} images matching tags {tags}"
+            return f"On <{booru}> there are {image} images matching tags {tags}"
 
         for image in js:
-            image["image_url"] = await get_image_url(booru, image)
-            if await check_if_url_works(image["image_url"]):
+            image_url = await get_image_url(booru, image)
+            if await check_if_url_works(image_url):
                 break
-
-        image_url = image["image_url"]
 
     return_message = "No pictures found!"
     if not image_url:
         if modifier == "Count":
-            return_message = f"On {booru} there are 0 images matching tags {tags}"
+            return_message = f"On <{booru}> there are 0 images matching tags {tags}"
     else:
         return_message = image_url
 
@@ -132,7 +131,7 @@ async def do_booru(booru, tags, modifier=None, limit=1):
 async def get_js_pages(booru, tags, limit):
     combined_js = []
     pid = 0
-    while True:
+    while limit > 0:
         print(limit, len(combined_js))
         api_url = await get_api_url(booru, tags=tags, limit=limit, pid=pid)
         print(api_url)
@@ -141,15 +140,11 @@ async def get_js_pages(booru, tags, limit):
         js = await fetch_js(api_url[0])
         booru = api_url[1]
         combined_js.extend(js)
-        if len(js) > 0:
-            limit -= len(js)
-        else:
+        if len(js) < 1000:
             limit = 0
-        pid += 1
-        if limit > 0:
-            await asyncio.sleep(0.1)
         else:
-            break
+            limit -= len(js)
+        pid += 1
     return (combined_js, booru)
 
 
@@ -165,8 +160,6 @@ async def get_image_data(image_url: str) -> io.BytesIO:
 async def get_image_url(booru, image_object) -> str:
     if not image_object:
         return ""
-    if "file_url" in image_object:
-        return image_object["file_url"]
     try:
         url = f"{booru}/images/{image_object['directory']}/{image_object['image']}"
         return url
@@ -195,8 +188,6 @@ async def check_if_url_works(url: str) -> bool:
             async with session.head(url) as r:
                 return r.status == 200
     except:
-        pass
-    finally:
         return False
 
 
