@@ -27,24 +27,27 @@ async def test_e621():
 async def test_danbooru():
     await booru("danbooru.donmai.us", ["yuri"], 1)
 
+@pytest.mark.asyncio
+async def test_colonize():
+    await booru("colonize.us.to", ["blush", "breasts"], 1)
 
 async def booru(booru, tags, sleep=0):
     return_message = await parse_command(booru, 1, tags, modifier="None")
     print(return_message)
-    assert return_message.startswith("https://")
+    assert return_message.startswith("http")
     await asyncio.sleep(sleep)
 
     return_message = await parse_command(booru, 50, tags, modifier="Random")
     print(return_message)
-    assert return_message.startswith("https://")
+    assert return_message.startswith("http")
     await asyncio.sleep(sleep)
 
     return_message = await parse_command(booru, 1, tags, modifier="Best")
     print(return_message)
-    assert return_message.startswith("https://")
+    assert return_message.startswith("http")
     await asyncio.sleep(sleep)
 
     return_message = await parse_command(booru, 1, tags, modifier="Wilson")
     print(return_message)
-    assert return_message.startswith("https://")
+    assert return_message.startswith("http")
     await asyncio.sleep(sleep)

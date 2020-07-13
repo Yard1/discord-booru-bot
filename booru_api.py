@@ -211,10 +211,16 @@ class Moebooru(Booru):
                 and "file_size" in image_object
                 and int(image_object["file_size"]) > 5000000
             ):
-                return image_object["sample_url"]
-            return image_object["file_url"]
+                url = image_object["sample_url"]
+            else:
+                url = image_object["file_url"]
 
-        url = f"{self.booru_url}/images/{image_object['directory']}/{image_object['image']}"
+        parse_result = urllib.parse.urlparse(url)
+        if not (parse_result.scheme and parse_result.netloc):
+            url = f"{self.booru_url}/{url}"
+            parse_result = urllib.parse.urlparse(url)
+            if not (parse_result.scheme and parse_result.netloc):
+                url = f"{self.booru_url}/images/{image_object['directory']}/{image_object['image']}"
         return url
 
     async def get_jsons(self, tags: list, limit: int, sleep: int = 0, **kwargs) -> list:
@@ -463,7 +469,7 @@ async def create_booru(booru_url: str) -> Booru:
     if not booru and await check_if_url_works(api_url):
         booru = Gelbooru(booru_url)
     api_url = f"{booru_url}/posts.json"
-    if not booru:
+    if not booru and await check_if_url_works(api_url):
         json = await fetch_js(api_url)
         if json:
             if "posts" in json:

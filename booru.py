@@ -9,7 +9,7 @@ import sys
 from booru_helpers import *
 from booru_api import create_booru, Booru, Deribooru, Gelbooru, E621, Moebooru
 
-ERROR_MESSAGE = "Something went wrong! Please try again."
+ERROR_MESSAGE = "Something went wrong, or the site is unsupported! Please try again."
 
 
 async def parse_command(booru: str, limit: int, tags: tuple, modifier: str) -> str:
@@ -28,6 +28,7 @@ async def do_booru(
     tags = [tag.strip() for tag in tags]
     return_message = ""
     booru_url = await fix_url(booru_url)
+    print(booru_url)
     try:
         booru = await create_booru(booru_url)
         print(f"{booru_url} classified as {booru.booru_type}")
