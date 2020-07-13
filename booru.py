@@ -30,6 +30,7 @@ async def do_booru(
     booru_url = await fix_url(booru_url)
     try:
         booru = await create_booru(booru_url)
+        print(f"{booru_url} classified as {booru.booru_type}")
         if modifier == "Random":
             return_message = await booru.get_random_image(tags, limit)
         elif modifier == "Score":
