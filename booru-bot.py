@@ -83,7 +83,7 @@ async def do_booru(booru, tags, modifier=None):
     image = None
     if js:
         if modifier == "Random":
-            js = random.shuffle(js)
+            random.shuffle(js)
         elif modifier == "Best":
             js = sorted(
                 js, reverse=True, key=lambda x: int(x["score"]) if x["score"] else 0
@@ -93,7 +93,7 @@ async def do_booru(booru, tags, modifier=None):
             return f"On {booru} there are {image} images matching tags {tags}"
 
         for image in js:
-            image["image_url"] = await get_image_url(image)
+            image["image_url"] = await get_image_url(booru, image)
             if await check_if_url_works(image["image_url"]):
                 break
 
