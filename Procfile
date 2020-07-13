@@ -1,1 +1,1 @@
-worker: python booru-bot.py $discord_api_key
+worker: python booru_bot.py $discord_api_key

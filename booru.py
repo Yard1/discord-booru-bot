@@ -1,4 +1,3 @@
-import discord
 import io
 import aiohttp
 import asyncio
@@ -8,79 +7,15 @@ import json
 import random
 import sys
 
-CLIENT = discord.Client()
+HEADERS = {"User-Agent": "BooruBot/1.0"}
+E621_API = "https://e621.net/posts.json"
 
 ERROR_MESSAGE = "Something went wrong! Please try again."
 
 
-@CLIENT.event
-async def on_ready():
-    print("We have logged in as {0.user}".format(CLIENT))
-
-
-@CLIENT.event
-async def on_message(message: discord.Message):
-    if message.author == CLIENT.user:
-        return
-
-    return_message = await parse_command(message)
-    print(return_message)
-
-    if return_message:
-        if isinstance(return_message, str):
-            print(
-                'Responding (Guild: %s, Channel: %s) with "%s"'
-                % (message.guild, message.channel.name, return_message)
-            )
-            await message.channel.send(return_message)
-
-
-async def parse_command(command: discord.Message) -> str:
-    message = ""
+async def parse_command(booru: str, limit: int, tags: tuple, modifier: str) -> str:
     try:
-        if command.content.startswith("$booru"):
-            modifier = None
-            if command.content.startswith("$booru-best ") or command.content.startswith(
-                "$booru-b "
-            ):
-                modifier = "Score"
-            elif command.content.startswith(
-                "$booru-wilson "
-            ) or command.content.startswith("$booru-w "):
-                modifier = "Wilson"
-            elif command.content.startswith(
-                "$booru-random "
-            ) or command.content.startswith("$booru-r "):
-                modifier = "Random"
-            elif command.content.startswith(
-                "$booru-count "
-            ) or command.content.startswith("$booru-c "):
-                modifier = "Count"
-            elif command.content.startswith("$booru "):
-                modifier = "None"
-            if modifier:
-                print(
-                    'User %s (ID: %s, Guild: %s, Channel: %s) made a command "%s"'
-                    % (
-                        command.author.name,
-                        command.author.id,
-                        command.guild,
-                        command.channel.name,
-                        command.content,
-                    )
-                )
-                command_message = command.content.strip().split()
-                if await (is_int(command_message[1])):
-                    message = await do_booru(
-                        command_message[2],
-                        command_message[3:],
-                        modifier=modifier,
-                        limit=int(command_message[1]),
-                    )
-                else:
-                    message = await do_booru(
-                        command_message[1], command_message[2:], modifier=modifier
-                    )
+        message = await do_booru(booru, tags, modifier=modifier, limit=limit,)
     except:
         traceback.print_exc()
         message = ERROR_MESSAGE
@@ -117,7 +52,6 @@ async def do_booru(
     try:
         js = await get_js_pages(booru_url, tags, limit, modifier)
         booru_type = js[2]
-        booru_url = js[1]
         js = js[0]
     except:
         traceback.print_exc()
@@ -153,16 +87,19 @@ async def get_js_pages(booru_url, tags, limit, modifier=""):
     pid = 0
     if limit < 1:
         limit = 1
-    booru_type = await get_api(booru_url)
-    if not booru_type:
+    booru = await get_api(booru_url)
+    if not booru:
         return (combined_js, booru_url, None)
+    booru_type = booru[1]
+    booru_api = booru[0]
     sort = None
+    max_limit = 1000
+    if booru_type == "Derpibooru":
+        max_limit = 50
     if limit <= 1 and modifier and not modifier == "None":
         limit = 1000
-        max_limit = 1000
         if booru_type == "Derpibooru":
             limit = 50
-            max_limit = 50
             if modifier == "Random":
                 sort = "random"
                 limit = 1
@@ -178,9 +115,13 @@ async def get_js_pages(booru_url, tags, limit, modifier=""):
                 tags.append("order:score")
             elif booru_type == "Gelbooru":
                 tags.append("sort:score")
-    while limit > 0:
+        elif modifier == "Random" and booru_api == E621_API:
+            tags.append("order:random")
+            limit = 1
+
+    while True:
         api_url = await get_api_url(
-            booru_url, booru_type=booru_type, tags=tags, limit=limit, pid=pid, sort=sort
+            booru_api, booru_type=booru_type, tags=tags, limit=limit, pid=pid, sort=sort
         )
         print(f"Found API link: {api_url}")
         if not api_url:
@@ -190,17 +131,24 @@ async def get_js_pages(booru_url, tags, limit, modifier=""):
         js = await fetch_js(api_url[0])
         if booru_type == "Derpibooru":
             js = js["images"]
+        elif booru_api == E621_API:
+            js = js["posts"]
         combined_js.extend(js)
         if len(js) < max_limit:
             limit = 0
         else:
             limit -= len(js)
         pid += 1
+        if limit > 0:
+            if booru_api == E621_API:
+                await asyncio.sleep(2)
+        else:
+            break
     return (combined_js, booru_url, booru_type)
 
 
 async def get_image_data(image_url: str) -> io.BytesIO:
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         async with session.get(image_url) as r:
             if r.status != 200:
                 return None
@@ -211,6 +159,14 @@ async def get_image_data(image_url: str) -> io.BytesIO:
 async def get_image_url(booru: str, booru_type: str, image_object) -> str:
     if not image_object:
         return ""
+    if "file" in image_object and "url" in image_object["file"]:
+        if (
+            "sample" in image_object
+            and "size" in image_object["file"]
+            and int(image_object["file"]["size"]) > 5000000
+        ):
+            return image_object["sample"]["url"]
+        return image_object["file"]["url"]
     if "file_url" in image_object:
         if (
             "sample_url" in image_object
@@ -230,7 +186,7 @@ async def get_image_url(booru: str, booru_type: str, image_object) -> str:
 
 async def fetch_js(url: str) -> str:
     timeout = aiohttp.ClientTimeout(total=30)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with aiohttp.ClientSession(timeout=timeout, headers=HEADERS) as session:
         async with session.get(url) as r:
             if r.status == 200:
                 text = await r.text()
@@ -245,7 +201,7 @@ async def check_if_url_works(url: str) -> bool:
         return False
     try:
         timeout = aiohttp.ClientTimeout(total=10)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with aiohttp.ClientSession(timeout=timeout, headers=HEADERS) as session:
             async with session.head(url) as r:
                 return r.status < 400
     except:
@@ -253,14 +209,20 @@ async def check_if_url_works(url: str) -> bool:
 
 
 async def get_api(booru_url: str) -> str:
-    if await check_if_url_works(f"{booru_url}/index.php?page=dapi"):
-        return "Gelbooru"
-    elif await check_if_url_works(f"{booru_url}/post.json"):
-        return "Danbooru"
-    elif await check_if_url_works(f"{booru_url}/api/v1/json/search/images"):
-        return "Derpibooru"
-    else:
-        return None
+    api_url = f"{booru_url}/index.php?page=dapi"
+    if await check_if_url_works(api_url):
+        return (api_url, "Gelbooru")
+    api_url = f"{booru_url}/post.json"
+    if await check_if_url_works(api_url):
+        return (api_url, "Danbooru")
+    api_url = f"{booru_url}/posts.json"
+    if await check_if_url_works(api_url):
+        return (api_url, "Danbooru")
+    api_url = f"{booru_url}/api/v1/json/search/images"
+    if await check_if_url_works(api_url):
+        return (api_url, "Derpibooru")
+
+    return None
 
 
 async def get_api_url(
@@ -275,9 +237,11 @@ async def get_api_url(
 ) -> str:
 
     if not booru_type:
-        booru_type = await get_api(booru_url)
-        if not booru_type:
+        booru = await get_api(booru_url)
+        if not booru:
             return None
+        booru_url = booru_url[0]
+        booru_type = booru[1]
 
     if booru_type == "Gelbooru":
         api_url = await get_gelbooru_api_url(booru_url, limit, pid, tags, cid, api_id)
@@ -314,7 +278,7 @@ async def get_gelbooru_api_url(
     if api_id:
         api_id = f"id={api_id}"
         args.append(api_id)
-    return f"{booru_url}/index.php?page=dapi&{'&'.join(args)}"
+    return f"{booru_url}&{'&'.join(args)}"
 
 
 async def get_danbooru_api_url(
@@ -341,7 +305,7 @@ async def get_danbooru_api_url(
     if api_id:
         api_id = f"id={api_id}"
         args.append(api_id)
-    return f"{booru_url}/post.json?{'&'.join(args)}"
+    return f"{booru_url}?{'&'.join(args)}"
 
 
 async def get_derpibooru_api_url(
@@ -357,9 +321,4 @@ async def get_derpibooru_api_url(
     if tags:
         tags = f"q={'%2C'.join(tags)}"
         args.append(tags)
-    return f"{booru_url}/api/v1/json/search/images?{'&'.join(args)}"
-
-
-if __name__ == "__main__":
-    CLIENT.run(str(sys.argv[1]))
-
+    return f"{booru_url}?{'&'.join(args)}"
