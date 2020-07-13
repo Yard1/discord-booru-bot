@@ -371,6 +371,7 @@ class Danbooru(Moebooru):
                 break
         return combined_js
 
+
 class Deribooru(Booru):
     booru_type = "Deribooru"
     booru_url = None

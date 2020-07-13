@@ -4,7 +4,10 @@ from discord.ext import commands
 from booru import parse_command
 import typing
 
-bot = commands.Bot(command_prefix="$",description="BooruBot by Yard1")
+bot = commands.Bot(
+    command_prefix="$", description="BooruBot by Yard1", activity=discord.Game("$help")
+)
+
 
 @bot.listen()
 async def on_ready():

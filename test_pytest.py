@@ -22,6 +22,7 @@ async def test_yandere():
 async def test_e621():
     await booru("e621.net", ("anthro", "female"), 2)
 
+
 @pytest.mark.asyncio
 async def test_danbooru():
     await booru("danbooru.donmai.us", ["yuri"], 1)
