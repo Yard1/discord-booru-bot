@@ -1,0 +1,1 @@
+worker: python booru-bot.py $discord_api_key
