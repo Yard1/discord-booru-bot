@@ -95,6 +95,9 @@ async def do_booru(booru, tags, modifier=None, limit=1):
         limit = 1000
     image_url = ""
     image = None
+    if modifier == "Best":
+        tags.append("sort:score")
+        limit = 1
     try:
         js = await get_js_pages(booru, tags, limit)
         booru = js[1]
@@ -105,10 +108,6 @@ async def do_booru(booru, tags, modifier=None, limit=1):
         print(len(js))
         if modifier == "Random":
             random.shuffle(js)
-        elif modifier == "Best":
-            js = sorted(
-                js, reverse=True, key=lambda x: int(x["score"]) if x["score"] else 0
-            )
         elif modifier == "Count":
             image = len(js)
             return f"On <{booru}> there are {image} images matching tags {tags}"
