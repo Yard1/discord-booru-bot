@@ -92,7 +92,7 @@ class Gelbooru(Booru):
         return f"{self.booru_api_url}&{'&'.join(args)}"
 
     async def get_random_image(self, tags: list, limit: int = 0) -> str:
-        if limit < 1:
+        if limit <= 1:
             limit = self.max_limit
         json = await self.get_jsons(tags=tags, limit=limit)
         return await self.get_image_url(random.choice(json))
@@ -107,7 +107,7 @@ class Gelbooru(Booru):
         return await self.get_image_url(json[0])
 
     async def get_images_count(self, tags: list, limit: int = 0) -> int:
-        if limit < 1:
+        if limit <= 1:
             limit = self.max_limit
         raise NotImplementedError()
 
@@ -185,7 +185,7 @@ class Moebooru(Booru):
         return f"{self.booru_api_url}?{'&'.join(args)}"
 
     async def get_random_image(self, tags: list, limit: int = 0) -> str:
-        if limit < 1:
+        if limit <= 1:
             limit = self.max_limit
         json = await self.get_jsons(tags=tags, limit=limit)
         return await self.get_image_url(random.choice(json))
@@ -200,7 +200,7 @@ class Moebooru(Booru):
         return await self.get_image_url(json[0])
 
     async def get_images_count(self, tags: list, limit: int = 0) -> int:
-        if limit < 1:
+        if limit <= 1:
             limit = self.max_limit
         raise NotImplementedError()
 
