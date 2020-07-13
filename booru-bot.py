@@ -52,10 +52,10 @@ async def parse_command(command: discord.Message) -> str:
                 print(
                     "User %s (ID: %s, Guild: %s) made a command %s"
                     % (
-                        message.author.name,
-                        message.author.id,
-                        message.guild,
-                        message.content,
+                        command.author.name,
+                        command.author.id,
+                        command.guild,
+                        command.content,
                     )
                 )
                 command_message = command.content.strip().split()
