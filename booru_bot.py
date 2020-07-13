@@ -47,7 +47,7 @@ async def booru_best(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: st
             ctx.message.author.id,
             ctx.message.guild,
             ctx.message.channel.name,
-            return_message
+            return_message,
         )
     )
     await ctx.send(return_message)
@@ -72,7 +72,7 @@ async def booru_random(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: 
             ctx.message.author.id,
             ctx.message.guild,
             ctx.message.channel.name,
-            return_message
+            return_message,
         )
     )
     await ctx.send(return_message)
@@ -97,35 +97,35 @@ async def booru_wilson(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: 
             ctx.message.author.id,
             ctx.message.guild,
             ctx.message.channel.name,
-            return_message
+            return_message,
         )
     )
     await ctx.send(return_message)
 
 
-@bot.command()
-async def booru_count(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: str):
-    print(
-        'User %s (ID: %s, Guild: %s, Channel: %s) made a command "%s"'
-        % (
-            ctx.message.author.name,
-            ctx.message.author.id,
-            ctx.message.guild,
-            ctx.message.channel.name,
-            ctx.message.content,
-        )
-    )
-    return_message = await parse_command(booru, limit, tags, "Count")
-    print(
-        'Sending (ID: %s, Guild: %s, Channel: %s) "%s"'
-        % (
-            ctx.message.author.id,
-            ctx.message.guild,
-            ctx.message.channel.name,
-            return_message
-        )
-    )
-    await ctx.send(return_message)
+# @bot.command()
+# async def booru_count(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: str):
+#     print(
+#         'User %s (ID: %s, Guild: %s, Channel: %s) made a command "%s"'
+#         % (
+#             ctx.message.author.name,
+#             ctx.message.author.id,
+#             ctx.message.guild,
+#             ctx.message.channel.name,
+#             ctx.message.content,
+#         )
+#     )
+#     return_message = await parse_command(booru, limit, tags, "Count")
+#     print(
+#         'Sending (ID: %s, Guild: %s, Channel: %s) "%s"'
+#         % (
+#             ctx.message.author.id,
+#             ctx.message.guild,
+#             ctx.message.channel.name,
+#             return_message
+#         )
+#     )
+#     await ctx.send(return_message)
 
 
 bot.run(str(sys.argv[1]))
