@@ -144,9 +144,9 @@ async def check_if_url_works(url: str) -> bool:
     if not (parse_result.scheme and parse_result.netloc):
         return False
     try:
-        timeout = aiohttp.ClientTimeout(total=15)
+        timeout = aiohttp.ClientTimeout(total=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(url) as r:
+            async with session.head(url) as r:
                 return r.status == 200
     except:
         pass
