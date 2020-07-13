@@ -148,8 +148,8 @@ class Gelbooru(Booru):
         return combined_js
 
 
-class Danbooru(Booru):
-    booru_type = "Danbooru"
+class Moebooru(Booru):
+    booru_type = "Moebooru"
     booru_url = None
     booru_api_url = None
     max_limit = 1000
@@ -241,7 +241,7 @@ class Danbooru(Booru):
         return combined_js
 
 
-class E621(Danbooru):
+class E621(Moebooru):
     booru_type = "E621"
     booru_url = None
     booru_api_url = None
@@ -252,7 +252,7 @@ class E621(Danbooru):
 
     async def get_random_image(self, tags: list, limit: int = 1) -> str:
         tags.append("order:random")
-        json = await self.get_jsons(tags=tags, limit=1, sort="random")
+        json = await self.get_jsons(tags=tags, limit=1)
         return await self.get_image_url(json[0])
 
     async def get_best_image(self, tags: list, limit: int = 1) -> str:
@@ -297,6 +297,79 @@ class E621(Danbooru):
                 break
         return combined_js
 
+
+class Danbooru(Moebooru):
+    booru_type = "Danbooru"
+    booru_url = None
+    booru_api_url = None
+    max_limit = 200
+
+    async def _init(self):
+        self.booru_api_url = f"{self.booru_url}/posts.json"
+
+    async def get_images_api(
+        self,
+        limit: int = 0,
+        pid: int = 0,
+        tags: list = None,
+        cid: int = 0,
+        api_id: int = 0,
+        **kwargs,
+    ) -> str:
+        args = [f"{k}={v}" for k, v in kwargs.items()]
+        if limit:
+            limit = f"limit={limit}"
+            args.append(limit)
+        if pid:
+            pid = f"page={pid}"
+            args.append(pid)
+        if tags:
+            tags = f"tags={'+'.join(tags)}"
+            args.append(tags)
+        if cid:
+            cid = f"cid={cid}"
+            args.append(cid)
+        if api_id:
+            api_id = f"id={api_id}"
+            args.append(api_id)
+        return f"{self.booru_api_url}?{'&'.join(args)}"
+
+    async def get_random_image(self, tags: list, limit: int = 1) -> str:
+        tags.append("order:random")
+        json = await self.get_jsons(tags=tags, limit=1)
+        return await self.get_image_url(json[0])
+
+    async def get_image_url(self, image_object: dict) -> str:
+        if (
+            "sample_url" in image_object
+            and "file_size" in image_object
+            and int(image_object["file_size"]) > 5000000
+        ):
+            return image_object["large_file_url"]
+        return image_object["file_url"]
+
+    async def get_jsons(self, tags: list, limit: int, sleep: int = 1, **kwargs) -> list:
+        combined_js = []
+        pid = 0
+        if limit < 1:
+            limit = 1
+        while True:
+            api_url = await self.get_images_api(limit, pid, tags, **kwargs)
+            if not api_url:
+                break
+            print(f"Found API link: {api_url}")
+            js = await fetch_js(api_url)
+            combined_js.extend(js)
+            if len(js) < self.max_limit:
+                limit = 0
+            else:
+                limit -= len(js)
+            pid += 1
+            if limit > 0:
+                await asyncio.sleep(sleep)
+            else:
+                break
+        return combined_js
 
 class Deribooru(Booru):
     booru_type = "Deribooru"
@@ -388,12 +461,17 @@ async def create_booru(booru_url: str) -> Booru:
     api_url = f"{booru_url}/index.php?page=dapi"
     if not booru and await check_if_url_works(api_url):
         booru = Gelbooru(booru_url)
+    api_url = f"{booru_url}/posts.json"
+    if not booru:
+        json = await fetch_js(api_url)
+        if json:
+            if "posts" in json:
+                booru = E621(booru_url)
+            else:
+                booru = Danbooru(booru_url)
     api_url = f"{booru_url}/post.json"
     if not booru and await check_if_url_works(api_url):
-        booru = Danbooru(booru_url)
-    api_url = f"{booru_url}/posts.json"
-    if not booru and await check_if_url_works(api_url):
-        booru = E621(booru_url)
+        booru = Moebooru(booru_url)
     api_url = f"{booru_url}/api/v1/json/search/images"
     if not booru and await check_if_url_works(api_url):
         booru = Deribooru(booru_url)

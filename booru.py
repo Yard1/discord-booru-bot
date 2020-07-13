@@ -7,7 +7,7 @@ import json
 import random
 import sys
 from booru_helpers import *
-from booru_api import create_booru, Booru, Deribooru, Gelbooru, E621, Danbooru
+from booru_api import create_booru, Booru, Deribooru, Gelbooru, E621, Moebooru
 
 ERROR_MESSAGE = "Something went wrong! Please try again."
 
