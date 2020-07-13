@@ -39,11 +39,13 @@ async def do_booru(
             return_message = await booru.get_wilson_image(tags)
         else:
             return_message = await booru.get_latest_image(tags)
-    except:
+    except Exception as ex:
+        if isinstance(ex, IndexError):
+            return "No images found!"
         traceback.print_exc()
         return ERROR_MESSAGE
 
     if not return_message:
-        return_message = "No message found, or booru not supported!"
+        return_message = "No images found, or booru not supported!"
 
     return return_message
