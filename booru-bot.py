@@ -13,12 +13,12 @@ CLIENT = discord.Client()
 ERROR_MESSAGE = "Something went wrong! Please try again."
 
 
-@client.event
+@CLIENT.event
 async def on_ready():
     print("We have logged in as {0.user}".format(CLIENT))
 
 
-@client.event
+@CLIENT.event
 async def on_message(message: discord.Message):
     if message.author == CLIENT.user:
         return
