@@ -112,7 +112,8 @@ async def get_image_data(image_url: str) -> io.BytesIO:
 
 
 async def fetch_js(url: str) -> str:
-    async with aiohttp.ClientSession() as session:
+    timeout = aiohttp.ClientTimeout(total=30)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.get(url) as r:
             if r.status == 200:
                 text = await r.text()
