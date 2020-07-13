@@ -80,29 +80,33 @@ async def do_booru(booru, tags, modifier=None):
     js = await fetch_js(api_url[0])
     booru = api_url[1]
     image_url = ""
+    image = None
     if js:
         if modifier == "Random":
-            js = random.choice(js)
+            js = random.shuffle(js)
         elif modifier == "Best":
-            js = sorted(js, reverse=True, key=lambda x: int(x["score"]) if x["score"] else 0)[0]
+            js = sorted(
+                js, reverse=True, key=lambda x: int(x["score"]) if x["score"] else 0
+            )
         elif modifier == "Count":
-            js = len(js)
-            return f"On {booru} there are {js} images matching tags {tags}"
-        else:
-            js = js[0]
-        if js:
-            image_url = f"{booru}/images/{js['directory']}/{js['image']}"
-    return_message = None
-    image_data = None
-    if image_url:
-        image_data = image_url
+            image = len(js)
+            return f"On {booru} there are {image} images matching tags {tags}"
 
-    if not image_data or not image_data[0]:
+        for image in js:
+            image["image_url"] = await get_image_url(image)
+            if await check_if_url_works(image["image_url"]):
+                break
+
+        image_url = image["image_url"]
+
+    return_message = "No pictures found!"
+    if not image_url:
         if modifier == "Count":
-            image_data = f"On {booru} there are 0 images matching tags {tags}"
-        else:
-            image_data = "No pictures found!"
-    return image_data
+            return_message = f"On {booru} there are 0 images matching tags {tags}"
+    else:
+        return_message = image_url
+
+    return return_message
 
 
 async def get_image_data(image_url: str) -> io.BytesIO:
@@ -114,6 +118,16 @@ async def get_image_data(image_url: str) -> io.BytesIO:
             return data
 
 
+async def get_image_url(booru, image_object) -> str:
+    if not image_object:
+        return ""
+    try:
+        url = f"{booru}/images/{image_object['directory']}/{image_object['image']}"
+        return url
+    except:
+        return ""
+
+
 async def fetch_js(url: str) -> str:
     timeout = aiohttp.ClientTimeout(total=30)
     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -123,6 +137,21 @@ async def fetch_js(url: str) -> str:
                 if text:
                     return json.loads(text)
     return None
+
+
+async def check_if_url_works(url: str) -> bool:
+    parse_result = urllib.parse.urlparse(url)
+    if not (parse_result.scheme and parse_result.netloc):
+        return False
+    try:
+        timeout = aiohttp.ClientTimeout(total=15)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url) as r:
+                return r.status == 200
+    except:
+        pass
+    finally:
+        return False
 
 
 async def get_api_url(
