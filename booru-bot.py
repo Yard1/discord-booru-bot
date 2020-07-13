@@ -44,7 +44,9 @@ async def parse_command(command: discord.Message) -> str:
                 "$booru-random "
             ) or command.content.startswith("$booru-r "):
                 modifier = "Random"
-            elif command.content.startswith("$booru-count "):
+            elif command.content.startswith(
+                "$booru-count "
+            ) or command.content.startswith("$booru-c "):
                 modifier = "Count"
             elif command.content.startswith("$booru "):
                 modifier = "None"
@@ -59,9 +61,12 @@ async def parse_command(command: discord.Message) -> str:
                     )
                 )
                 command_message = command.content.strip().split()
-                if await(is_int(command_message[1])):
+                if await (is_int(command_message[1])):
                     message = await do_booru(
-                        command_message[2], command_message[3:], modifier=modifier, limit=int(command_message[1])
+                        command_message[2],
+                        command_message[3:],
+                        modifier=modifier,
+                        limit=int(command_message[1]),
                     )
                 else:
                     message = await do_booru(
@@ -73,6 +78,7 @@ async def parse_command(command: discord.Message) -> str:
     finally:
         return message
 
+
 async def is_int(text: str) -> bool:
     try:
         int(text)
@@ -80,12 +86,13 @@ async def is_int(text: str) -> bool:
     except:
         return False
 
+
 async def do_booru(booru, tags, modifier=None, limit=1):
     tags = [tag.strip() for tag in tags]
     if limit < 1:
         limit = 1
-    if limit != 1 and modifier and not modifier == "None":
-        limit = 1001
+    if limit <= 1 and modifier and not modifier == "None":
+        limit = 1000
     image_url = ""
     image = None
     try:
@@ -121,23 +128,30 @@ async def do_booru(booru, tags, modifier=None, limit=1):
 
     return return_message
 
+
 async def get_js_pages(booru, tags, limit):
     combined_js = []
     pid = 0
     while True:
+        print(limit, len(combined_js))
         api_url = await get_api_url(booru, tags=tags, limit=limit, pid=pid)
+        print(api_url)
         if not api_url:
             break
         js = await fetch_js(api_url[0])
         booru = api_url[1]
         combined_js.extend(js)
-        limit -= len(js)
+        if len(js) > 0:
+            limit -= len(js)
+        else:
+            limit = 0
         pid += 1
         if limit > 0:
-            asyncio.sleep(1)
+            await asyncio.sleep(0.1)
         else:
             break
     return (combined_js, booru)
+
 
 async def get_image_data(image_url: str) -> io.BytesIO:
     async with aiohttp.ClientSession() as session:
@@ -151,6 +165,8 @@ async def get_image_data(image_url: str) -> io.BytesIO:
 async def get_image_url(booru, image_object) -> str:
     if not image_object:
         return ""
+    if "file_url" in image_object:
+        return image_object["file_url"]
     try:
         url = f"{booru}/images/{image_object['directory']}/{image_object['image']}"
         return url
@@ -166,7 +182,7 @@ async def fetch_js(url: str) -> str:
                 text = await r.text()
                 if text:
                     return json.loads(text)
-    return None
+    return []
 
 
 async def check_if_url_works(url: str) -> bool:
@@ -186,23 +202,23 @@ async def check_if_url_works(url: str) -> bool:
 
 async def get_api_url(
     booru,
-    limit: str = "",
-    pid: str = "",
+    limit: int = 0,
+    pid: int = 0,
     tags: list = None,
-    cid: str = "",
-    api_id: str = "",
+    cid: int = 0,
+    api_id: int = 0,
 ) -> str:
-    if limit:
+    if limit or limit == 0:
         limit = f"&limit={limit}"
-    if pid:
+    if pid or pid == 0:
         pid = f"&pid={pid}"
     if tags:
         tags = f"&tags={'+'.join(tags)}"
     else:
         tags = ""
-    if cid:
+    if cid or cid == 0:
         cid = f"&cid={cid}"
-    if api_id:
+    if api_id or api_id == 0:
         api_id = f"&id={api_id}"
 
     parse_result = urllib.parse.urlparse(booru)
@@ -212,7 +228,6 @@ async def get_api_url(
         parse_result = urllib.parse.urlparse(booru)
         if not (parse_result.scheme and parse_result.netloc):
             return None
-
     return (
         f"{booru}/index.php?page=dapi&s=post&q=index&json=1{limit}{pid}{tags}{cid}{api_id}",
         booru,
