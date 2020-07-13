@@ -60,7 +60,7 @@ async def parse_command(command: discord.Message) -> str:
                 )
                 command_message = command.content.strip().split()
                 message = await do_booru(
-                    command_message[1], command_message[2:], modifier
+                    command_message[1], command_message[2:], modifier=modifier
                 )
     except:
         traceback.print_exc()
@@ -69,11 +69,12 @@ async def parse_command(command: discord.Message) -> str:
         return message
 
 
-async def do_booru(booru, tags, modifier=None):
+async def do_booru(booru, tags, modifier=None, limit=1):
     tags = [tag.strip() for tag in tags]
-    limit = 1
-    if modifier and not modifier == "None":
-        limit = 21474836472147483647
+    if limit < 1:
+        limit = 1
+    if limit != 1 and modifier and not modifier == "None":
+        limit = 1001
     api_url = await get_api_url(booru, tags=tags, limit=limit)
     if not api_url:
         return "Wrong booru address!"
