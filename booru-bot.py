@@ -73,7 +73,7 @@ async def do_booru(booru, tags, modifier=None):
     tags = [tag.strip() for tag in tags]
     limit = 1
     if modifier and not modifier == "None":
-        limit = 101
+        limit = 21474836472147483647
     api_url = await get_api_url(booru, tags=tags, limit=limit)
     if not api_url:
         return "Wrong booru address!"
@@ -98,7 +98,10 @@ async def do_booru(booru, tags, modifier=None):
         image_data = image_url
 
     if not image_data or not image_data[0]:
-        image_data = "No pictures found!"
+        if modifier == "Count":
+            image_data = f"On {booru} there are 0 images matching tags {tags}"
+        else:
+            image_data = "No pictures found!"
     return image_data
 
 
