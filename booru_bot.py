@@ -13,7 +13,8 @@ async def on_ready():
 
 
 @bot.command()
-async def booru(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: str):
+async def booru(ctx, booru: str, *tags: str):
+    """Get the latest image with tags."""
     print(
         'User %s (ID: %s, Guild: %s, Channel: %s) made a command "%s"'
         % (
@@ -24,12 +25,13 @@ async def booru(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: str):
             ctx.message.content,
         )
     )
-    return_message = await parse_command(booru, limit, tags, "None")
+    return_message = await parse_command(booru, 1, tags, "None")
     await ctx.send(return_message)
 
 
 @bot.command()
-async def booru_best(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: str):
+async def booru_best(ctx, booru: str, *tags: str):
+    """Get the image with tags with highest Score."""
     print(
         'User %s (ID: %s, Guild: %s, Channel: %s) made a command "%s"'
         % (
@@ -40,7 +42,7 @@ async def booru_best(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: st
             ctx.message.content,
         )
     )
-    return_message = await parse_command(booru, limit, tags, "Score")
+    return_message = await parse_command(booru, 1, tags, "Score")
     print(
         'Sending (ID: %s, Guild: %s, Channel: %s) "%s"'
         % (
@@ -55,6 +57,7 @@ async def booru_best(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: st
 
 @bot.command()
 async def booru_random(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: str):
+    """Get a random image with tags."""
     print(
         'User %s (ID: %s, Guild: %s, Channel: %s) made a command "%s"'
         % (
@@ -79,7 +82,8 @@ async def booru_random(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: 
 
 
 @bot.command()
-async def booru_wilson(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: str):
+async def booru_wilson(ctx, booru: str, *tags: str):
+    """Get the image with tags with highest Wilson Score. Defaults to booru_score if unsupported."""
     print(
         'User %s (ID: %s, Guild: %s, Channel: %s) made a command "%s"'
         % (
@@ -90,7 +94,7 @@ async def booru_wilson(ctx, booru: str, limit: typing.Optional[int] = 1, *tags: 
             ctx.message.content,
         )
     )
-    return_message = await parse_command(booru, limit, tags, "Wilson")
+    return_message = await parse_command(booru, 1, tags, "Wilson")
     print(
         'Sending (ID: %s, Guild: %s, Channel: %s) "%s"'
         % (
