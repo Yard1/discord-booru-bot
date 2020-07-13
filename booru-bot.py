@@ -84,7 +84,7 @@ async def do_booru(booru, tags, modifier=None):
         if modifier == "Random":
             js = random.choice(js)
         elif modifier == "Best":
-            js = sorted(js, reverse=True, key=lambda x: int(x["score"]))[0]
+            js = sorted(js, reverse=True, key=lambda x: int(x["score"]) if x["score"] else 0)[0]
         elif modifier == "Count":
             js = len(js)
             return f"On {booru} there are {js} images matching tags {tags}"
