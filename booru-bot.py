@@ -75,13 +75,14 @@ async def do_booru(booru, tags, modifier=None, limit=1):
         limit = 1
     if limit != 1 and modifier and not modifier == "None":
         limit = 1001
-    api_url = await get_api_url(booru, tags=tags, limit=limit)
-    if not api_url:
-        return "Wrong booru address!"
-    js = await fetch_js(api_url[0])
-    booru = api_url[1]
     image_url = ""
     image = None
+    try:
+        js = await get_js_pages(booru, tags, limit)
+        booru = js[1]
+        js = js[0]
+    except:
+        traceback.print_exc()
     if js:
         if modifier == "Random":
             random.shuffle(js)
@@ -109,6 +110,23 @@ async def do_booru(booru, tags, modifier=None, limit=1):
 
     return return_message
 
+async def get_js_pages(booru, tags, limit):
+    combined_js = []
+    pid = 0
+    while True:
+        api_url = await get_api_url(booru, tags=tags, limit=limit, pid=pid)
+        if not api_url:
+            break
+        js = await fetch_js(api_url[0])
+        booru = api_url[1]
+        combined_js.extend(js)
+        limit -= len(js)
+        pid += 1
+        if limit > 0:
+            asyncio.sleep(1)
+        else:
+            break
+    return (combined_js, booru)
 
 async def get_image_data(image_url: str) -> io.BytesIO:
     async with aiohttp.ClientSession() as session:
