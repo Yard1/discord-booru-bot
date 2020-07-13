@@ -59,15 +59,26 @@ async def parse_command(command: discord.Message) -> str:
                     )
                 )
                 command_message = command.content.strip().split()
-                message = await do_booru(
-                    command_message[1], command_message[2:], modifier=modifier
-                )
+                if await(is_int(command_message[1])):
+                    message = await do_booru(
+                        command_message[2], command_message[3:], modifier=modifier, limit=int(command_message[1])
+                    )
+                else:
+                    message = await do_booru(
+                        command_message[1], command_message[2:], modifier=modifier
+                    )
     except:
         traceback.print_exc()
         message = ERROR_MESSAGE
     finally:
         return message
 
+async def is_int(text: str) -> bool:
+    try:
+        int(text)
+        return True
+    except:
+        return False
 
 async def do_booru(booru, tags, modifier=None, limit=1):
     tags = [tag.strip() for tag in tags]
