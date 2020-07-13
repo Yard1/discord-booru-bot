@@ -4,8 +4,7 @@ from discord.ext import commands
 from booru import parse_command
 import typing
 
-bot = commands.Bot(command_prefix="$")
-
+bot = commands.Bot(command_prefix="$",description="BooruBot by Yard1")
 
 @bot.listen()
 async def on_ready():
