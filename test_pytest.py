@@ -31,13 +31,17 @@ async def test_danbooru():
 async def test_colonize():
     await booru("colonize.us.to", ["blush", "breasts"], 1)
 
+@pytest.mark.asyncio
+async def test_paheal():
+    await booru("rule34.paheal.net", ["yuri", "Doki_Doki_Literature_Club"], 1)
+
 async def booru(booru, tags, sleep=0):
     return_message = await parse_command(booru, 1, tags, modifier="None")
     print(return_message)
     assert return_message.startswith("http")
     await asyncio.sleep(sleep)
 
-    return_message = await parse_command(booru, 50, tags, modifier="Random")
+    return_message = await parse_command(booru, 0, tags, modifier="Random")
     print(return_message)
     assert return_message.startswith("http")
     await asyncio.sleep(sleep)

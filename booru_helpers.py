@@ -7,10 +7,12 @@ import json
 import random
 import sys
 import socket
+import xmltodict
 
 HEADERS = {"User-Agent": "BooruBot/1.0"}
 
 ERROR_MESSAGE = "Something went wrong, or the site is unsupported! Please try again."
+
 
 async def is_int(text: str) -> bool:
     try:
@@ -36,12 +38,22 @@ async def fix_url(booru_url: str) -> str:
 async def fetch_js(url: str) -> str:
     timeout = aiohttp.ClientTimeout(total=30)
     async with aiohttp.ClientSession(timeout=timeout, headers=HEADERS) as session:
-        print(url)
         async with session.get(url, ssl=False) as r:
             if r.status == 200:
                 text = await r.text()
                 if text:
                     return json.loads(text)
+    return []
+
+
+async def fetch_xml(url: str) -> str:
+    timeout = aiohttp.ClientTimeout(total=30)
+    async with aiohttp.ClientSession(timeout=timeout, headers=HEADERS) as session:
+        async with session.get(url, ssl=False) as r:
+            if r.status == 200:
+                text = await r.text()
+                if text:
+                    return xmltodict.parse(text, process_namespaces=True)
     return []
 
 
