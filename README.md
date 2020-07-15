@@ -22,7 +22,7 @@ discord-booru-bot by Yard1
   booru        Get the latest image with tags.
   booru_best   Get the image with tags with highest Score.
   booru_random Get a random image with tags.
-  booru_wilson Get the image with tags with highest Wilson Score. Defaults to...
+  booru_wilson Get the image with tags with highest Wilson Score. Defaults to booru_score if unsupported.
   help         Shows this message
 
 Type $help command for more info on a command.
