@@ -4,19 +4,20 @@ Discord bot to get images from various image boorus. Will try to automatically d
 
 ## Usage
 
-Run `booru_bot.py <DISCORDTOKEN>` from command line.
+Run `python/booru_bot.py <DISCORDTOKEN>` from command line.
 
 ## Supported APIs:
+
 * Gelbooru
 * Danbooru
 * Shimmie2
 * e621.net
 * Derpibooru
 
-# Author
+## Author
 
 Antoni Baum
 
-# License
+## License
 
 MIT
