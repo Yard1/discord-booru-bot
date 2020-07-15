@@ -29,7 +29,7 @@ from booru import parse_command
 import typing
 
 bot = commands.Bot(
-    command_prefix="$", description="BooruBot by Yard1", activity=discord.Game("$help")
+    command_prefix="$", description="discord-booru-bot by Yard1", activity=discord.Game("$help")
 )
 
 
