@@ -468,8 +468,9 @@ class Shimmie2(Danbooru):
         return combined_js
 
 
-class Deribooru(Booru):
-    booru_type = "Deribooru"
+# Derpibooru
+class Philomena(Booru):
+    booru_type = "Philomena"
     booru_url = None
     booru_api_url = None
     max_limit = 50
@@ -571,7 +572,7 @@ async def create_booru(booru_url: str) -> Booru:
         booru = Moebooru(booru_url)
     api_url = f"{booru_url}/api/v1/json/search/images"
     if not booru and await check_if_url_works(api_url):
-        booru = Deribooru(booru_url)
+        booru = Philomena(booru_url)
     api_url = f"{booru_url}/api/danbooru/post/index.xml"
     if not booru and await check_if_url_works(api_url):
         booru = Shimmie2(booru_url)

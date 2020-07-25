@@ -31,7 +31,7 @@ import json
 import random
 import sys
 from booru_helpers import *
-from booru_api import create_booru, Booru, Deribooru, Gelbooru, E621, Moebooru
+from booru_api import create_booru, Booru, Philomena, Gelbooru, E621, Moebooru
 
 ERROR_MESSAGE = "Something went wrong, or the site is unsupported! Please try again."
 
