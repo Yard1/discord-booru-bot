@@ -450,12 +450,15 @@ class Shimmie2(Danbooru):
                 break
             print(f"Found API link: {api_url}")
             js = await fetch_xml(api_url)
-            js = (
-                [js["posts"]["post"]]
-                if not isinstance(js["posts"]["post"], list)
-                else js["posts"]["post"]
-            )
-            combined_js.extend(js)
+            try:
+                js = (
+                    [js["posts"]["post"]]
+                    if not isinstance(js["posts"]["post"], list)
+                    else js["posts"]["post"]
+                )
+                combined_js.extend(js)
+            except:
+                return combined_js
             if len(js) < self.max_limit:
                 limit = 0
             else:
